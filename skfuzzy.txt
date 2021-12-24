@@ -1,0 +1,51 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+# New Antecedent/Consequent objects hold universe variables and membership
+# functions
+x = ctrl.Antecedent(np.arange(0, 9, 1), 'x')
+y = ctrl.Antecedent(np.arange(0, 9, 1), 'y')
+z = ctrl.Consequent(np.arange(0, 9, 1), 'z')
+
+# Auto-membership function population is possible with .automf(3, 5, or 7)
+#x.automf(3)
+#y.automf(3)
+
+# Custom membership functions can be built interactively with a familiar,
+# Pythonic API
+x['n'] = fuzz.trimf(x.universe, [0, 2, 4])
+x['z'] = fuzz.trimf(x.universe, [2, 4, 6])
+x['p'] = fuzz.trimf(x.universe, [4, 6, 8])
+y['n'] = fuzz.trimf(y.universe, [0, 2, 4])
+y['z'] = fuzz.trimf(y.universe, [2, 4, 6])
+y['p'] = fuzz.trimf(y.universe, [4, 6, 8])
+z['s'] = fuzz.trimf(z.universe, [0, 2, 4])
+z['m'] = fuzz.trimf(z.universe, [2, 4, 6])
+z['h'] = fuzz.trimf(z.universe, [4, 6, 8])
+# You can see how these look with .view()
+x.view()
+y.view()
+z.view()
+rule1 = ctrl.Rule(x['n'] & y['n'], z['s'])
+rule2 = ctrl.Rule(x['n'] & y['z'], z['m'])
+rule3 = ctrl.Rule(x['n'] & y['p'], z['m'])
+rule4 = ctrl.Rule(x['z'] & y['n'], z['m'])
+rule5 = ctrl.Rule(x['z'] & y['z'], z['h'])
+rule6 = ctrl.Rule(x['z'] & y['p'], z['h'])
+rule7 = ctrl.Rule(x['p'] & y['n'], z['m'])
+rule8 = ctrl.Rule(x['p'] & y['z'], z['h'])
+rule9 = ctrl.Rule(x['p'] & y['p'], z['h'])
+
+rule1.view()
+tipping_ctrl = ctrl.ControlSystem([rule1, rule2, rule3,rule4, rule5, rule6,rule7, rule8, rule9])
+tipping = ctrl.ControlSystemSimulation(tipping_ctrl)
+# Pass inputs to the ControlSystem using Antecedent labels with Pythonic API
+# Note: if you like passing many inputs all at once, use .inputs(dict_of_data)
+tipping.input['x'] = 3
+tipping.input['y'] = 5
+
+# Crunch the numbers
+tipping.compute()
+print(tipping.output['z'])
+z.view(sim=tipping)
